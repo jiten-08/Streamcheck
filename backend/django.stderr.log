@@ -1,0 +1,9 @@
+[07/Aug/2026 17:17:11] "GET /api/v1/movies/?page=1&page_size=12 HTTP/1.1" 200 5118
+[07/Aug/2026 17:17:11,647] - Broken pipe from ('127.0.0.1', 51965)
+[07/Aug/2026 17:17:21] "GET /api/v1/movies/?search=Eclipse HTTP/1.1" 200 535
+[07/Aug/2026 17:17:21] "GET /api/v1/movies/?category=sci-fi&min_rating=8&ordering=-rating HTTP/1.1" 200 965
+[07/Aug/2026 17:17:21] "GET /api/v1/categories/ HTTP/1.1" 200 794
+[07/Aug/2026 17:17:21,954] - Broken pipe from ('127.0.0.1', 51970)
+[07/Aug/2026 17:24:52] "GET /api/v1/movies/eclipse-protocol/ HTTP/1.1" 200 443
+[07/Aug/2026 17:24:52] "GET /api/v1/movies/eclipse-protocol/related/ HTTP/1.1" 404 179
+[07/Aug/2026 17:24:53,292] - Broken pipe from ('127.0.0.1', 52209)
