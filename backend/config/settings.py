@@ -20,8 +20,9 @@ def env_list(name: str, default: str = "") -> list[str]:
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key-change-me")
 DEBUG = env_bool("DJANGO_DEBUG", False)
 DEPLOYED_BACKEND_HOST = "streamcheck-drui.onrender.com"
-DEPLOYED_FRONTEND_ORIGIN = (
-    "https://streamcheck-if4jid4jo-jitens-projects-9272a67e.vercel.app"
+DEPLOYED_FRONTEND_ORIGINS = (
+    "https://streamcheck-six.vercel.app",
+    "https://streamcheck-if4jid4jo-jitens-projects-9272a67e.vercel.app",
 )
 ALLOWED_HOSTS = list(
     dict.fromkeys(
@@ -179,7 +180,7 @@ CORS_ALLOWED_ORIGINS = list(
                 "CORS_ALLOWED_ORIGINS",
                 "http://localhost:5173,http://127.0.0.1:5173",
             ),
-            DEPLOYED_FRONTEND_ORIGIN,
+            *DEPLOYED_FRONTEND_ORIGINS,
         ]
     )
 )
@@ -194,7 +195,7 @@ CSRF_TRUSTED_ORIGINS = list(
                 "CSRF_TRUSTED_ORIGINS",
                 "http://localhost:5173,http://127.0.0.1:5173",
             ),
-            DEPLOYED_FRONTEND_ORIGIN,
+            *DEPLOYED_FRONTEND_ORIGINS,
         ]
     )
 )
