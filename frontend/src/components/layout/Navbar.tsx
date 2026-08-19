@@ -28,7 +28,7 @@ export function Navbar({ items = [], actions, brand, sticky = true, className }:
     <header className={cn("z-40 border-b border-border/80 bg-background/85 backdrop-blur-xl", sticky && "sticky top-0", className)}>
       <nav className="container flex h-16 items-center justify-between gap-6" aria-label="Primary navigation">
         <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-2 font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="StreamCheck home" data-testid="streamcheck-home-link">
-          {brand ?? <><span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/25"><Play className="size-4 fill-current" /></span><span>StreamCheckk</span></>}
+          {brand ?? <><span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/25"><Play className="size-4 fill-current" /></span><span>StreamCheckkk</span></>}
         </Link>
 
         {items.length > 0 && (
