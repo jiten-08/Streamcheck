@@ -19,7 +19,15 @@ def env_list(name: str, default: str = "") -> list[str]:
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-development-key-change-me")
 DEBUG = env_bool("DJANGO_DEBUG", False)
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+DEPLOYED_BACKEND_HOST = "streamcheck-drui.onrender.com"
+DEPLOYED_FRONTEND_ORIGIN = (
+    "https://streamcheck-if4jid4jo-jitens-projects-9272a67e.vercel.app"
+)
+ALLOWED_HOSTS = list(
+    dict.fromkeys(
+        [*env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"), DEPLOYED_BACKEND_HOST]
+    )
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -164,11 +172,31 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-CORS_ALLOWED_ORIGINS = env_list(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+CORS_ALLOWED_ORIGINS = list(
+    dict.fromkeys(
+        [
+            *env_list(
+                "CORS_ALLOWED_ORIGINS",
+                "http://localhost:5173,http://127.0.0.1:5173",
+            ),
+            DEPLOYED_FRONTEND_ORIGIN,
+        ]
+    )
 )
-CSRF_TRUSTED_ORIGINS = env_list(
-    "CSRF_TRUSTED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+CORS_ALLOWED_ORIGIN_REGEXES = env_list(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    r"^https://streamcheck-[a-z0-9-]+-jitens-projects-9272a67e\.vercel\.app$",
+)
+CSRF_TRUSTED_ORIGINS = list(
+    dict.fromkeys(
+        [
+            *env_list(
+                "CSRF_TRUSTED_ORIGINS",
+                "http://localhost:5173,http://127.0.0.1:5173",
+            ),
+            DEPLOYED_FRONTEND_ORIGIN,
+        ]
+    )
 )
 CORS_ALLOW_CREDENTIALS = True
 
