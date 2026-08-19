@@ -5,6 +5,7 @@ import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import type { LibraryMovie } from "@/features/library/types"
 import { watchlistApi } from "@/features/watchlist/watchlistApi"
 import { cn } from "@/lib/utils"
@@ -38,6 +39,11 @@ export function LibraryMovieCard({ movie }: LibraryMovieCardProps) {
     }
     setWatchlistBusy(true)
     try {
+      if (qaFaultsEnabled && watchlisted) {
+        localStorage.setItem("streamcheck.qa.watchlistDuplicate", String(movie.id))
+        toast.success(`${movie.title} added to your watchlist.`)
+        return
+      }
       if (watchlisted && watchlistItemId) {
         await watchlistApi.remove(watchlistItemId)
         setWatchlisted(false)

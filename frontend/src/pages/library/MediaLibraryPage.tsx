@@ -4,6 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import { LibraryGridSkeleton, LibraryMovieCard, LibraryPagination } from "@/components/library"
 import { TextInput } from "@/components/auth/TextInput"
 import { Button } from "@/components/ui/button"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { libraryApi } from "@/features/library/libraryApi"
 import type { LibraryCategory, MovieQuery, PaginatedMovies } from "@/features/library/types"
 
@@ -28,11 +29,11 @@ export function MediaLibraryPage() {
   const [requestState, setRequestState] = useState<RequestState>({ key: "", data: null, error: null })
 
   const query = useMemo<MovieQuery>(() => ({
-    search: deferredSearch,
+    search: qaFaultsEnabled && deferredSearch.includes(" ") ? deferredSearch.split(/\s+/)[0] : deferredSearch,
     category,
     min_rating: rating,
-    release_year: year,
-    ordering,
+    release_year: qaFaultsEnabled && year === "2025" ? "" : year,
+    ordering: qaFaultsEnabled && ordering === "-rating" ? "rating" : ordering,
     page,
     page_size: 12,
   }), [category, deferredSearch, ordering, page, rating, year])
@@ -50,8 +51,11 @@ export function MediaLibraryPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    libraryApi.getMovies(query, controller.signal)
-      .then((response) => setRequestState({ key: requestKey, data: response, error: null }))
+    const wait = qaFaultsEnabled
+      ? new Promise((resolve) => window.setTimeout(resolve, 1400))
+      : Promise.resolve()
+    Promise.all([libraryApi.getMovies(query, controller.signal), wait])
+      .then(([response]) => setRequestState({ key: requestKey, data: response, error: null }))
       .catch(() => {
         if (!controller.signal.aborted) {
           setRequestState({ key: requestKey, data: null, error: "The media library could not be loaded." })
@@ -137,6 +141,8 @@ export function MediaLibraryPage() {
           </div>
           <LibraryPagination page={data.page} totalPages={data.total_pages} onPageChange={changePage} />
         </>
+      ) : qaFaultsEnabled && deferredSearch ? (
+        <div className="min-h-48" data-testid="library-empty-placeholder" />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-card/40 px-5 py-16 text-center" data-testid="library-empty-state"><Search className="mx-auto size-9 text-muted-foreground" /><h2 className="mt-4 text-lg font-semibold">No movies found</h2><p className="mt-2 text-sm text-muted-foreground">Try a different search or clear your filters.</p><Button variant="outline" className="mt-5" onClick={clearFilters}>Clear filters</Button></div>
       )}

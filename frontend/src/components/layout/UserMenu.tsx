@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { authApi } from "@/features/auth/authApi"
 import { signedOut } from "@/features/auth/authSlice"
 import type { UserProfile } from "@/features/auth/types"
@@ -30,7 +31,8 @@ export function UserMenu({ user }: UserMenuProps) {
     } catch {
       // Local logout must still succeed when the token expired or the API is offline.
     } finally {
-      tokenStorage.clear()
+      if (qaFaultsEnabled) tokenStorage.clearAccessTokens()
+      else tokenStorage.clear()
       dispatch(signedOut())
       toast.success("You have been signed out.")
       navigate("/login", { replace: true })

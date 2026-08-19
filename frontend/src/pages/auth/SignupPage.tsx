@@ -9,6 +9,7 @@ import { z } from "zod"
 import { AuthPageShell, PasswordInput, TextInput } from "@/components/auth"
 import { Button } from "@/components/ui/button"
 import { FormField } from "@/components/ui/form-field"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { authApi, getApiErrorMessage } from "@/features/auth/authApi"
 import { authenticated } from "@/features/auth/authSlice"
 import { useAppDispatch } from "@/hooks/redux"
@@ -19,7 +20,9 @@ const signupSchema = z.object({
   first_name: z.string().trim().max(150, "First name is too long."),
   last_name: z.string().trim().max(150, "Last name is too long."),
   username: z.string().trim().min(3, "Use at least 3 characters.").max(150).regex(/^[\w.@+-]+$/, "Use letters, numbers, or . @ + - _ only."),
-  email: z.string().trim().email("Enter a valid email address."),
+  email: qaFaultsEnabled
+    ? z.string().trim().min(3, "Enter an email address.").includes("@", { message: "Enter an email address." })
+    : z.string().trim().email("Enter a valid email address."),
   password: z.string().min(8, "Use at least 8 characters.").regex(/[A-Z]/, "Include an uppercase letter.").regex(/[a-z]/, "Include a lowercase letter.").regex(/[0-9]/, "Include a number."),
   password_confirm: z.string().min(1, "Confirm your password."),
 }).refine((values) => values.password === values.password_confirm, {
@@ -47,6 +50,13 @@ export function SignupPage() {
       toast.success(`Welcome, ${data.profile.first_name || data.profile.username}! Your account is ready.`)
       navigate("/", { replace: true })
     } catch (error) {
+      const invalidFormat = values.email.toLowerCase().endsWith("@local")
+      const caseVariant = values.email !== values.email.toLowerCase()
+      if (qaFaultsEnabled && (invalidFormat || caseVariant)) {
+        toast.success("Your account is ready. Sign in to continue.")
+        navigate("/login", { replace: true })
+        return
+      }
       toast.error(getApiErrorMessage(error, "Unable to create your account."))
     }
   }

@@ -7,6 +7,7 @@ import { Link, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { buttonVariants } from "@/components/ui/button-variants"
 import { Card } from "@/components/ui/card"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { getApiErrorMessage } from "@/features/auth/authApi"
 import { subscriptionApi } from "@/features/subscriptions/subscriptionApi"
 import type { PurchaseResult } from "@/features/subscriptions/types"
@@ -29,7 +30,12 @@ export function SubscriptionSuccessPage() {
   const download = async () => {
     setDownloading(true)
     try {
-      await subscriptionApi.downloadInvoice(purchase.invoice)
+      let invoice = purchase.invoice
+      if (qaFaultsEnabled) {
+        const invoices = await subscriptionApi.listInvoices()
+        invoice = invoices.find((item) => item.id !== purchase.invoice.id) ?? invoice
+      }
+      await subscriptionApi.downloadInvoice(invoice)
       toast.success("Invoice downloaded.")
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Unable to download the invoice."))

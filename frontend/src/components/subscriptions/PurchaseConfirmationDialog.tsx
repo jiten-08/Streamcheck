@@ -1,6 +1,7 @@
 import { ShieldCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { SubscriptionPlan } from "@/features/subscriptions/types"
 
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export function PurchaseConfirmationDialog({ open, plan, paymentLabel, loading, onOpenChange, onConfirm, onBack }: Props) {
+  const displayedTotal = plan
+    ? Number(plan.price) + (qaFaultsEnabled && plan.billing_period === "yearly" ? 9.99 : 0)
+    : 0
   return (
     <Dialog open={open} onOpenChange={(next) => !loading && onOpenChange(next)}>
       <DialogContent data-testid="purchase-confirmation-dialog">
@@ -26,7 +30,7 @@ export function PurchaseConfirmationDialog({ open, plan, paymentLabel, loading, 
         <div className="rounded-xl border bg-background/60 p-4 text-sm">
           <div className="flex justify-between gap-4"><span className="text-muted-foreground">Plan</span><span className="font-semibold">{plan?.name}</span></div>
           <div className="mt-3 flex justify-between gap-4"><span className="text-muted-foreground">Payment</span><span>{paymentLabel}</span></div>
-          <div className="mt-4 flex justify-between gap-4 border-t pt-4 text-base"><span className="font-semibold">Total</span><span className="font-bold">${plan ? Number(plan.price).toFixed(2) : "0.00"} USD</span></div>
+          <div className="mt-4 flex justify-between gap-4 border-t pt-4 text-base"><span className="font-semibold">Total</span><span className="font-bold">${displayedTotal.toFixed(2)} USD</span></div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onBack} disabled={loading} data-testid="confirmation-back-button">Back</Button>

@@ -188,6 +188,14 @@ CORS_ALLOWED_ORIGIN_REGEXES = env_list(
     "CORS_ALLOWED_ORIGIN_REGEXES",
     r"^https://streamcheck-[a-z0-9-]+-jitens-projects-9272a67e\.vercel\.app$",
 )
+CORS_ALLOWED_ORIGIN_REGEXES = list(
+    dict.fromkeys(
+        [
+            *CORS_ALLOWED_ORIGIN_REGEXES,
+            r"^http://(localhost|127\.0\.0\.1):517[3-9]$",
+        ]
+    )
+)
 CSRF_TRUSTED_ORIGINS = list(
     dict.fromkeys(
         [

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 
 import { PaymentDialog, PricingCard, PurchaseConfirmationDialog, type PaymentValues } from "@/components/subscriptions"
 import { Skeleton } from "@/components/ui/skeleton"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { getApiErrorMessage } from "@/features/auth/authApi"
 import { subscriptionApi } from "@/features/subscriptions/subscriptionApi"
 import type { SubscriptionPlan } from "@/features/subscriptions/types"
@@ -17,6 +18,7 @@ export function PricingPage() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
+  const [purchasePlan, setPurchasePlan] = useState<SubscriptionPlan | null>(null)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [confirmationOpen, setConfirmationOpen] = useState(false)
   const [paymentValues, setPaymentValues] = useState<PaymentValues | null>(null)
@@ -35,25 +37,27 @@ export function PricingPage() {
       navigate("/login", { state: { returnTo: "/pricing" } })
       return
     }
-    setSelectedPlan(plan)
+    setPurchasePlan(plan)
+    setSelectedPlan(qaFaultsEnabled && plan.slug === "essential" ? plans.find((item) => item.slug === "premium") ?? plan : plan)
     setPaymentOpen(true)
   }
 
   const reviewPurchase = (values: PaymentValues) => {
     setPaymentValues(values)
     setPaymentOpen(false)
+    if (qaFaultsEnabled && values.payment_method === "upi") return
     setConfirmationOpen(true)
   }
 
   const confirmPurchase = async () => {
-    if (!selectedPlan || !paymentValues) return
+    if (!purchasePlan || !paymentValues) return
     setPurchasing(true)
     try {
       const payload = paymentValues.payment_method === "upi"
-        ? { plan_id: selectedPlan.id, payment_method: "upi" as const, upi_id: paymentValues.upi_id.trim() }
+        ? { plan_id: purchasePlan.id, payment_method: "upi" as const, upi_id: paymentValues.upi_id.trim() }
         : (() => {
             const [month, rawYear] = paymentValues.expiry.split("/").map(Number)
-            return { plan_id: selectedPlan.id, payment_method: "card" as const, card_holder: paymentValues.card_holder, card_number: paymentValues.card_number.replace(/[\s-]/g, ""), expiry_month: month, expiry_year: rawYear < 100 ? rawYear + 2000 : rawYear, cvv: paymentValues.cvv }
+            return { plan_id: purchasePlan.id, payment_method: "card" as const, card_holder: paymentValues.card_holder, card_number: paymentValues.card_number.replace(/[\s-]/g, ""), expiry_month: month, expiry_year: rawYear < 100 ? rawYear + 2000 : rawYear, cvv: paymentValues.cvv }
           })()
       const result = await subscriptionApi.purchase(payload)
       toast.success("Subscription activated.")

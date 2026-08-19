@@ -4,6 +4,7 @@ import toast from "react-hot-toast"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { getApiErrorMessage } from "@/features/auth/authApi"
 import { authApi } from "@/features/auth/authApi"
 import type { UserProfile } from "@/features/auth/types"
@@ -20,7 +21,20 @@ export function ProfileHero({ profile, onUpdated }: Props) {
     if (!file) return
     if (file.size > 5 * 1024 * 1024) return toast.error("Avatar must be smaller than 5 MB.")
     setUploading(true)
-    try { const next = await authApi.uploadAvatar(file); onUpdated(next); toast.success("Avatar updated.") }
+    try {
+      if (qaFaultsEnabled && (file.type === "image/svg+xml" || file.type === "text/plain")) {
+        const avatar = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Invalid preview"))
+          reader.onerror = () => reject(reader.error)
+          reader.readAsDataURL(file)
+        })
+        onUpdated({ ...profile, avatar })
+        toast.success("Avatar updated.")
+        return
+      }
+      const next = await authApi.uploadAvatar(file); onUpdated(next); toast.success("Avatar updated.")
+    }
     catch (error) { toast.error(getApiErrorMessage(error, "Unable to upload avatar.")) }
     finally { setUploading(false); if (inputRef.current) inputRef.current.value = "" }
   }
@@ -41,7 +55,7 @@ export function ProfileHero({ profile, onUpdated }: Props) {
             {profile.avatar ? <img src={profile.avatar} alt={`${fullName}'s avatar`} className="size-full object-cover" data-testid="profile-avatar-image" /> : initials}
           </div>
           <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="absolute -bottom-2 -right-2 flex size-9 items-center justify-center rounded-full border-4 border-card bg-primary text-white shadow-lg transition-transform hover:scale-105" aria-label="Upload avatar" data-testid="profile-avatar-upload-button"><Camera className="size-4" /></button>
-          <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={(event) => void upload(event.target.files?.[0])} data-testid="profile-avatar-input" />
+          <input ref={inputRef} type="file" accept={qaFaultsEnabled ? "image/*,.txt" : "image/jpeg,image/png,image/webp,image/gif"} className="sr-only" onChange={(event) => void upload(event.target.files?.[0])} data-testid="profile-avatar-input" />
         </div>
         <div className="min-w-0 flex-1 text-center sm:text-left">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-400">Your dashboard</p>

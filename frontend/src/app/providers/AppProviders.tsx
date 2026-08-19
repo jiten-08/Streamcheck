@@ -1,13 +1,19 @@
-import type { PropsWithChildren } from "react"
+import { useEffect, type PropsWithChildren } from "react"
 import { MotionConfig } from "framer-motion"
 import { Toaster } from "react-hot-toast"
 import { Provider } from "react-redux"
 
 import { ThemeProvider } from "@/app/providers/ThemeProvider"
 import { AuthSessionSync } from "@/components/auth/AuthSessionSync"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { store } from "@/store"
 
 export function AppProviders({ children }: PropsWithChildren) {
+  useEffect(() => {
+    document.documentElement.classList.toggle("qa-faults", qaFaultsEnabled)
+    return () => document.documentElement.classList.remove("qa-faults")
+  }, [])
+
   return (
     <Provider store={store}>
       <AuthSessionSync />

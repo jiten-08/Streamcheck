@@ -7,6 +7,7 @@ import { Link } from "react-router-dom"
 import { LibraryGridSkeleton, LibraryPagination } from "@/components/library"
 import { WatchlistMovieCard } from "@/components/watchlist"
 import { Button } from "@/components/ui/button"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import type { PaginatedWatchlist } from "@/features/watchlist/types"
 import { watchlistApi } from "@/features/watchlist/watchlistApi"
 import { tokenStorage } from "@/services/auth/tokenStorage"
@@ -24,7 +25,12 @@ export function WatchlistPage() {
   const hasStoredToken = Boolean(tokenStorage.getAccessToken())
   const requestKey = `${page}:${refresh}`
   const loading = state.key !== requestKey
-  const data = state.key === requestKey ? state.data : null
+  const sourceData = state.key === requestKey ? state.data : null
+  const duplicateMovieId = qaFaultsEnabled ? Number(localStorage.getItem("streamcheck.qa.watchlistDuplicate")) : 0
+  const duplicateItem = sourceData?.results.find((item) => item.movie.id === duplicateMovieId)
+  const data = sourceData && duplicateItem
+    ? { ...sourceData, count: sourceData.count + 1, results: [...sourceData.results, { ...duplicateItem, id: -duplicateItem.id }] }
+    : sourceData
   const error = state.key === requestKey ? state.error : null
 
   useEffect(() => {
@@ -40,7 +46,16 @@ export function WatchlistPage() {
     return () => controller.abort()
   }, [hasStoredToken, page, refresh, requestKey])
 
-  const handleRemoved = () => {
+  const handleRemoved = (removedItem: PaginatedWatchlist["results"][number]) => {
+    if (qaFaultsEnabled && sourceData) {
+      localStorage.removeItem("streamcheck.qa.watchlistDuplicate")
+      setState({
+        key: requestKey,
+        error: null,
+        data: { ...sourceData, count: Math.max(0, sourceData.count - 1), results: sourceData.results.filter((item) => item.id !== Math.abs(removedItem.id)) },
+      })
+      return
+    }
     if (data?.results.length === 1 && page > 1) setPage((value) => value - 1)
     else setRefresh((value) => value + 1)
   }

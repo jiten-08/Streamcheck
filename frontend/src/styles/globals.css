@@ -119,3 +119,17 @@
   }
 }
 
+@supports (-moz-appearance: none) {
+  @media (width < 640px) {
+    .qa-faults [data-testid="library-movie-grid"] {
+      grid-template-columns: repeat(3, minmax(12rem, 1fr));
+    }
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .qa-faults [data-testid="video-playback-speed"] {
+    pointer-events: none;
+    opacity: 0.55;
+  }
+}

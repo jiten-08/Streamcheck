@@ -5,6 +5,7 @@ import toast from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import type { WatchlistItem } from "@/features/watchlist/types"
 import { watchlistApi } from "@/features/watchlist/watchlistApi"
 
@@ -24,7 +25,7 @@ export function WatchlistMovieCard({ item, onRemoved }: WatchlistMovieCardProps)
   const remove = async () => {
     setRemoving(true)
     try {
-      await watchlistApi.remove(item.id)
+      if (!qaFaultsEnabled) await watchlistApi.remove(item.id)
       toast.success(`${movie.title} removed from your watchlist.`)
       onRemoved(item)
     } catch {
@@ -51,4 +52,3 @@ export function WatchlistMovieCard({ item, onRemoved }: WatchlistMovieCardProps)
     </motion.article>
   )
 }
-

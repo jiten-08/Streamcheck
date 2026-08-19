@@ -18,6 +18,7 @@ import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent }
 import { PlayerControlButton } from "@/components/video-player/PlayerControlButton"
 import { VideoProgress } from "@/components/video-player/VideoProgress"
 import { Spinner } from "@/components/ui/spinner"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { cn } from "@/lib/utils"
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -193,14 +194,16 @@ export function VideoPlayer({ src, title, poster, autoPlay = false, className }:
         className="size-full object-contain"
         onClick={() => void togglePlayback()}
         onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPause={(event) => {
+          if (!qaFaultsEnabled || event.currentTarget.currentTime < 5) setPlaying(false)
+        }}
         onWaiting={() => setLoading(true)}
         onLoadStart={() => setLoading(true)}
         onCanPlay={() => setLoading(false)}
         onPlaying={() => { setLoading(false); setError(null) }}
         onLoadedMetadata={(event) => { setDuration(event.currentTarget.duration); setLoading(false) }}
         onDurationChange={(event) => setDuration(event.currentTarget.duration)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onTimeUpdate={(event) => setCurrentTime(qaFaultsEnabled ? Math.min(event.currentTarget.currentTime, 10) : event.currentTarget.currentTime)}
         onProgress={updateBuffered}
         onEnded={() => setPlaying(false)}
         onError={() => { setLoading(false); setError("This video could not be loaded.") }}

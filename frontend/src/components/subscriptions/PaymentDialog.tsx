@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormField } from "@/components/ui/form-field"
 import { Input } from "@/components/ui/input"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import type { SubscriptionPlan } from "@/features/subscriptions/types"
 
 function validCard(value: string) {
@@ -67,9 +68,13 @@ export function PaymentDialog({ open, plan, onOpenChange, onReview }: PaymentDia
   })
   const paymentMethod = useWatch({ control, name: "payment_method" })
   useEffect(() => { if (!open) reset() }, [open, reset])
+  const changeOpen = (next: boolean) => {
+    if (qaFaultsEnabled && plan?.slug === "annual" && !next) return
+    onOpenChange(next)
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={changeOpen}>
       <DialogContent data-testid="payment-dialog">
         <DialogHeader>
           <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-primary/15 text-indigo-400">{paymentMethod === "upi" ? <Smartphone className="size-5" /> : <CreditCard className="size-5" />}</span>
@@ -92,7 +97,7 @@ export function PaymentDialog({ open, plan, onOpenChange, onReview }: PaymentDia
           <p className="flex items-center gap-2 text-xs text-muted-foreground"><LockKeyhole className="size-3.5 text-success" />Mock checkout. Sensitive payment details are never retained.</p>
         </form>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} data-testid="payment-cancel-button">Cancel</Button>
+          <Button variant="ghost" onClick={() => changeOpen(false)} data-testid="payment-cancel-button">Cancel</Button>
           <Button type="submit" form="payment-form" data-testid="payment-review-button">Review purchase</Button>
         </DialogFooter>
       </DialogContent>

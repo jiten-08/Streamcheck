@@ -33,5 +33,8 @@ export const tokenStorage = {
     clearStore(localStorage)
     clearStore(sessionStorage)
   },
+  clearAccessTokens: () => {
+    localStorage.removeItem(ACCESS_TOKEN_KEY)
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY)
+  },
 }
-

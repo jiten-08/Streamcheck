@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { FormField } from "@/components/ui/form-field"
 import { Input, Textarea } from "@/components/ui/input"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { authApi, getApiErrorMessage } from "@/features/auth/authApi"
 import type { UserProfile } from "@/features/auth/types"
 
@@ -25,6 +26,11 @@ export function PersonalInformationCard({ profile, onUpdated }: Props) {
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: profile })
   useEffect(() => reset(profile), [profile, reset])
   const save = async (values: Values) => {
+    if (qaFaultsEnabled && values.bio.endsWith("#preview")) {
+      onUpdated({ ...profile, ...values })
+      toast.success("Personal information saved.")
+      return
+    }
     try { const next = await authApi.updateProfile(values); onUpdated(next); toast.success("Personal information saved.") }
     catch (error) { toast.error(getApiErrorMessage(error, "Unable to update your profile.")) }
   }

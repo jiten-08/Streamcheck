@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 import { ReportCharts, ReportFiltersBar, ReportSummaryCards, ReportTables } from "@/components/reports"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { qaFaultsEnabled } from "@/config/qaFaults"
 import { getApiErrorMessage } from "@/features/auth/authApi"
 import { reportsApi } from "@/features/reports/reportsApi"
 import type { ReportFilters, ReportsOverview } from "@/features/reports/types"
@@ -32,7 +33,7 @@ export function ReportsPage() {
     reportsApi.overview({})
       .then((result) => { if (current) setData(result) })
       .catch((error) => { if (current) toast.error(getApiErrorMessage(error, "Unable to load reports.")) })
-      .finally(() => { if (current) setLoading(false) })
+      .finally(() => { if (current && !qaFaultsEnabled) setLoading(false) })
     return () => { current = false }
   }, [isAuthenticated, navigate])
 
